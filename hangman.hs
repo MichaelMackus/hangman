@@ -1,4 +1,4 @@
-import System.IO
+import System.IO -- Required for the hSetEcho primitive
 
 hangman :: IO ()
 hangman = do putStrLn "Think of a word: "
