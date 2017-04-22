@@ -29,6 +29,7 @@ s-cr--
 ? secret
 You got it!
 ```
-# References
+# Reference
 This game is an example which illustrates the basics of IO programming.
+
 The materials were gathered from the book "Programming in Haskell" http://www.cs.nott.ac.uk/~pszgmh/pih.html
