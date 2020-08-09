@@ -1,3 +1,6 @@
+import Control.Monad.State
+import Data.List
+import Data.Maybe
 import System.Environment
 import System.IO
 import System.Random
@@ -18,7 +21,8 @@ hangman = do args  <- getArgs
                  putStrLn "Think of a word (blank for random): "
                  word <- sgetLine arg
                  putStrLn "Try to guess it:"
-                 play word 0
+                 runStateT (play word) ("", 0)
+                 return ()
 
 {-
 
@@ -67,67 +71,73 @@ and processes the guesses until the game ends.
 
 -}
 
-hangman_phases = [ unlines ["  +---+",
-                            "  |   |",
-                            "      |",
-                            "      |",
-                            "      |",
-                            "      |",
-                            "========="],
-                   unlines ["  +---+",
-                            "  |   |",
-                            "  O   |",
-                            "      |",
-                            "      |",
-                            "      |",
-                            "========="],
-                   unlines ["  +---+",
-                            "  |   |",
-                            "  O   |",
-                            "  |   |",
-                            "      |",
-                            "      |",
-                            "========="],
-                   unlines ["  +---+",
-                            "  |   |",
-                            "  O   |",
-                            " /|   |",
-                            "      |",
-                            "      |",
-                            "========="],
-                   unlines ["  +---+",
-                            "  |   |",
-                            "  O   |",
-                            " /|\\  |",
-                            "      |",
-                            "      |",
-                            "========="],
-                   unlines ["  +---+",
-                            "  |   |",
-                            "  O   |",
-                            " /|\\  |",
-                            " /    |",
-                            "      |",
-                            "========="],
-                   unlines ["  +---+",
-                            "  |   |",
-                            "  O   |",
-                            " /|\\  |",
-                            " / \\  |",
-                            "      |"] ]
+phases = [ unlines ["  +---+",
+                    "  |   |",
+                    "      |",
+                    "      |",
+                    "      |",
+                    "      |",
+                    "========="],
+           unlines ["  +---+",
+                    "  |   |",
+                    "  O   |",
+                    "      |",
+                    "      |",
+                    "      |",
+                    "========="],
+           unlines ["  +---+",
+                    "  |   |",
+                    "  O   |",
+                    "  |   |",
+                    "      |",
+                    "      |",
+                    "========="],
+           unlines ["  +---+",
+                    "  |   |",
+                    "  O   |",
+                    " /|   |",
+                    "      |",
+                    "      |",
+                    "========="],
+           unlines ["  +---+",
+                    "  |   |",
+                    "  O   |",
+                    " /|\\  |",
+                    "      |",
+                    "      |",
+                    "========="],
+           unlines ["  +---+",
+                    "  |   |",
+                    "  O   |",
+                    " /|\\  |",
+                    " /    |",
+                    "      |",
+                    "========="],
+           unlines ["  +---+",
+                    "  |   |",
+                    "  O   |",
+                    " /|\\  |",
+                    " / \\  |",
+                    "      |"] ]
 
-play :: String -> Int -> IO ()
-play word failures =
-   do putStr (hangman_phases !! failures)
-      if failures == (length hangman_phases - 1) then putStrLn ("Uh oh! You lose. The word was " ++ word)
+play :: String -> StateT (String, Int) IO ()
+play word =
+   do (s, failures) <- get
+      let phase = phases !! min (length phases) failures
+      liftIO (putStr phase)
+      if failures >= (length phases - 1) then
+           liftIO $ putStrLn ("Uh oh! You lose. The word was: " ++ word)
       else do
-           guess <- take (length word) <$> getLine
-           putStrLn ("You guessed: " ++ guess)
-           if guess == word then
-               putStrLn "You got it!"
+           guess <- liftIO $ take (length word) <$> getLine
+           let s' = match word (guess ++ s)
+               mismatches = length (notmatching word guess)
+               failures' = failures + (max 1 mismatches)
+           put (s', failures')
+           if word == s' then
+               liftIO $ putStrLn ("You got it! The word was: " ++ word)
            else do
-               putStrLn (match word guess)
-               play word (failures + 1)
+               liftIO (putStrLn s')
+               play word
 
 {-
 
@@ -146,6 +156,17 @@ Note “haskell” matches l twice in “pascal”:
 match :: String -> String -> String
 match xs ys =
    [if elem x ys then x else '-' | x <- xs]
+
+{-
+
+Return non matching chars.
+
+-}
+notmatching :: String -> String -> String
+notmatching xs ys = catMaybes $ map (f xs) ys
+    where f xs '-' = Nothing
+          f xs x   = if x `elem` xs then Nothing else Just x
+
 
 {-
 
