@@ -17,13 +17,17 @@ hangman :: IO ()
 hangman = do args  <- getArgs
              let arg = if length args > 0 then args !! 0 else default_dictionary
              if arg == "-h" || arg == "--help" then putStr usage
-             else do
-                 putStrLn "Think of a word (blank for random): "
-                 word <- sgetLine arg
-                 putStr (phases !! 0)
-                 putStrLn "Try to guess it:"
-                 runStateT (play word) mempty
-                 return ()
+             else game arg
+    where game dict = do putStrLn "Think of a word (blank for random): "
+                         word <- sgetLine dict
+                         putStr (phases !! 0)
+                         putStrLn "Try to guess it:"
+                         runStateT (play word) mempty
+                         putStr "Play again? (Y/n) "
+                         hFlush stdout
+                         yn <- getChar
+                         if yn /= 'n' then game dict
+                         else return ()
 
 {-
 
