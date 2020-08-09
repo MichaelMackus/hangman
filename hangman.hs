@@ -135,6 +135,7 @@ play :: String -> StateT (String, String) IO ()
 play word =
    do (s, failures) <- get
       guess <- liftIO $ take (length word) <$> getLine
+      when (guess == "QUIT") (fail "User quit")
       let s' = match word (guess ++ s)
           mismatches = notmatching word guess
           failures' = failures ++ mismatches
