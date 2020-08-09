@@ -1,5 +1,5 @@
 import System.IO -- Required for the hSetEcho primitive
-import System.Random
+import System.Random -- Required to get random dictionary word
 
 main :: IO ()
 main = hangman
