@@ -12,9 +12,9 @@ hangman = do putStrLn "Think of a word (blank for random): "
 
 {-
 
-The action sgetLine reads a line of text from the
-keyboard, echoing each character as a dash to keep
-the word secret:
+The action sgetLine reads a line of text from the keyboard, echoing each
+character as a dash to keep the word secret. If there is no text inputted, it
+reads a random line from the local dictionary.
 
 -}
 
