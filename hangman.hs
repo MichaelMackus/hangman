@@ -127,7 +127,7 @@ play word =
       guess <- liftIO $ take (length word) <$> getLine
       let s' = match word (guess ++ s)
           mismatches = length (notmatching word guess)
-          failures' = failures + (max 1 mismatches)
+          failures' = failures + mismatches
           max_failures = length phases - 1
           phase = phases !! min max_failures failures'
       put (s', failures')
