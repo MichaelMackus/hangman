@@ -1,10 +1,11 @@
 import System.IO -- Required for the hSetEcho primitive
+import System.Random
 
 main :: IO ()
 main = hangman
 
 hangman :: IO ()
-hangman = do putStrLn "Think of a word: "
+hangman = do putStrLn "Think of a word (blank for random): "
              word <- sgetLine
              putStrLn "Try to guess it:"
              play word 0
@@ -17,15 +18,25 @@ the word secret:
 
 -}
 
+dictionary_file = "/usr/share/dict/usa"
 sgetLine :: IO String
-sgetLine = do x <- getCh
-              if x == '\n' then
-                 do putChar x
-                    return []
+sgetLine = do input <- getInputOrDict
+              putStrLn (map (const '-') input)
+              return input
+    where getInputOrDict =  do
+              input <- getInput
+              if input == "" then do
+                  dict  <- lines <$> readFile dictionary_file
+                  index <- getStdRandom (randomR (0, length dict))
+                  return (dict !! index)
               else
-                 do putChar '-'
-                    xs <- sgetLine
-                    return (x:xs)
+                  return input
+          getInput = do x <- getCh
+                        if x == '\n' then
+                           do return []
+                        else
+                           do xs <- sgetLine
+                              return (x:xs)
 
 {-
 
