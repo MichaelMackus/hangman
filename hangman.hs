@@ -20,6 +20,7 @@ hangman = do args  <- getArgs
              else do
                  putStrLn "Think of a word (blank for random): "
                  word <- sgetLine arg
+                 putStr (phases !! 0)
                  putStrLn "Try to guess it:"
                  runStateT (play word) ("", 0)
                  return ()
@@ -123,21 +124,22 @@ phases = [ unlines ["  +---+",
 play :: String -> StateT (String, Int) IO ()
 play word =
    do (s, failures) <- get
-      let phase = phases !! min (length phases) failures
+      guess <- liftIO $ take (length word) <$> getLine
+      let s' = match word (guess ++ s)
+          mismatches = length (notmatching word guess)
+          failures' = failures + (max 1 mismatches)
+          max_failures = length phases - 1
+          phase = phases !! min max_failures failures'
+      put (s', failures')
       liftIO (putStr phase)
-      if failures >= (length phases - 1) then
-           liftIO $ putStrLn ("Uh oh! You lose. The word was: " ++ word)
-      else do
-           guess <- liftIO $ take (length word) <$> getLine
-           let s' = match word (guess ++ s)
-               mismatches = length (notmatching word guess)
-               failures' = failures + (max 1 mismatches)
-           put (s', failures')
-           if word == s' then
-               liftIO $ putStrLn ("You got it! The word was: " ++ word)
-           else do
-               liftIO (putStrLn s')
-               play word
+      if word == s' && failures' <= max_failures then
+          liftIO $ putStrLn ("You got it! The word was: " ++ word)
+      else
+          if failures' >= max_failures then
+              liftIO $ putStrLn ("Uh oh! You lose. The word was: " ++ word)
+          else do
+              liftIO (putStrLn s')
+              play word
 
 {-
 
