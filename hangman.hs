@@ -22,7 +22,7 @@ hangman = do args  <- getArgs
                  word <- sgetLine arg
                  putStr (phases !! 0)
                  putStrLn "Try to guess it:"
-                 runStateT (play word) ("", 0)
+                 runStateT (play word) mempty
                  return ()
 
 {-
@@ -121,25 +121,33 @@ phases = [ unlines ["  +---+",
                     " / \\  |",
                     "      |"] ]
 
-play :: String -> StateT (String, Int) IO ()
+play :: String -> StateT (String, String) IO ()
 play word =
    do (s, failures) <- get
       guess <- liftIO $ take (length word) <$> getLine
       let s' = match word (guess ++ s)
-          mismatches = length (notmatching word guess)
-          failures' = failures + mismatches
+          mismatches = notmatching word guess
+          failures' = failures ++ mismatches
           max_failures = length phases - 1
-          phase = phases !! min max_failures failures'
+          phase = phases !! min max_failures (length failures')
       put (s', failures')
-      liftIO (putStr phase)
-      if word == s' && failures' <= max_failures then
+      liftIO (displayHangman phase failures')
+      if word == s' && length failures' <= max_failures then
           liftIO $ putStrLn ("You got it! The word was: " ++ word)
       else
-          if failures' >= max_failures then
+          if length failures' >= max_failures then
               liftIO $ putStrLn ("Uh oh! You lose. The word was: " ++ word)
           else do
               liftIO (putStrLn s')
               play word
+
+displayHangman :: String -> String -> IO ()
+displayHangman phase failures = do
+    let ls = lines phase
+    putStr $ ls !! 0 ++ "\t\tIncorrect guesses:\n"
+    putStr $ ls !! 1 ++ "\n"
+    putStr $ ls !! 2 ++ "\t\t" ++ nub failures ++ "\n"
+    putStr $ unlines (drop 3 ls)
 
 {-
 
