@@ -17,7 +17,13 @@ hangman :: IO ()
 hangman = do args  <- getArgs
              let arg = if length args > 0 then args !! 0 else default_dictionary
              if arg == "-h" || arg == "--help" then putStr usage
-             else game arg
+             else do
+                title <- readFile "title.txt"
+                putStr title
+                putStrLn ""
+                putStrLn "Type QUIT in all caps to quit the game"
+                putStrLn ""
+                game arg
     where game dict = do putStrLn "Think of a word (blank for random): "
                          word <- sgetLine dict
                          putStr (phases !! 0)
