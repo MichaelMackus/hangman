@@ -110,10 +110,10 @@ hangman_phases = [ unlines ["  +---+",
 play :: String -> Int -> IO ()
 play word failures =
    do putStr (hangman_phases !! failures)
-      putStr "? "
-      if failures == (length hangman_phases - 1) then putStrLn "Uh oh! You lose."
+      if failures == (length hangman_phases - 1) then putStrLn ("Uh oh! You lose. The word was " ++ word)
       else do
-           guess <- getLine
+           guess <- take (length word) <$> getLine
+           putStrLn ("You guessed: " ++ guess)
            if guess == word then
                putStrLn "You got it!"
            else do
