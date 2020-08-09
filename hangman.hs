@@ -1,10 +1,13 @@
 import System.IO -- Required for the hSetEcho primitive
 
+main :: IO ()
+main = hangman
+
 hangman :: IO ()
 hangman = do putStrLn "Think of a word: "
              word <- sgetLine
              putStrLn "Try to guess it:"
-             play word
+             play word 0
 
 {-
 
@@ -44,15 +47,67 @@ and processes the guesses until the game ends.
 
 -}
 
-play :: String -> IO ()
-play word = 
-   do putStr "? "
-      guess <- getLine
-      if guess == word then
-         putStrLn "You got it!"
-      else
-         do putStrLn (match word guess)
-            play word
+hangman_phases = [ unlines ["  +---+",
+                            "  |   |",
+                            "      |",
+                            "      |",
+                            "      |",
+                            "      |",
+                            "========="],
+                   unlines ["  +---+",
+                            "  |   |",
+                            "  O   |",
+                            "      |",
+                            "      |",
+                            "      |",
+                            "========="],
+                   unlines ["  +---+",
+                            "  |   |",
+                            "  O   |",
+                            "  |   |",
+                            "      |",
+                            "      |",
+                            "========="],
+                   unlines ["  +---+",
+                            "  |   |",
+                            "  O   |",
+                            " /|   |",
+                            "      |",
+                            "      |",
+                            "========="],
+                   unlines ["  +---+",
+                            "  |   |",
+                            "  O   |",
+                            " /|\\  |",
+                            "      |",
+                            "      |",
+                            "========="],
+                   unlines ["  +---+",
+                            "  |   |",
+                            "  O   |",
+                            " /|\\  |",
+                            " /    |",
+                            "      |",
+                            "========="],
+                   unlines ["  +---+",
+                            "  |   |",
+                            "  O   |",
+                            " /|\\  |",
+                            " / \\  |",
+                            "      |"] ]
+
+play :: String -> Int -> IO ()
+play word failures =
+   do putStr (hangman_phases !! failures)
+      putStr "? "
+      if failures == (length hangman_phases - 1) then putStrLn "Uh oh! You lose."
+      else do
+           guess <- getLine
+           if guess == word then
+               putStrLn "You got it!"
+           else do
+               putStrLn (match word guess)
+               play word (failures + 1)
 
 {-
 
