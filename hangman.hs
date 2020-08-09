@@ -1,14 +1,24 @@
-import System.IO -- Required for the hSetEcho primitive
-import System.Random -- Required to get random dictionary word
+import System.Environment
+import System.IO
+import System.Random
 
 main :: IO ()
 main = hangman
 
+dictionary_file = "/usr/share/dict/usa"
+usage = unlines ["Usage: hangman [DICTIONARY_FILE]",
+                 "",
+                 "NOTE: DICTIONARY_FILE defaults to " ++ default_dictionary]
+
 hangman :: IO ()
-hangman = do putStrLn "Think of a word (blank for random): "
-             word <- sgetLine
-             putStrLn "Try to guess it:"
-             play word 0
+hangman = do args  <- getArgs
+             let arg = if length args > 0 then args !! 0 else default_dictionary
+             if arg == "-h" || arg == "--help" then putStr usage
+             else do
+                 putStrLn "Think of a word (blank for random): "
+                 word <- sgetLine arg
+                 putStrLn "Try to guess it:"
+                 play word 0
 
 {-
 
@@ -18,11 +28,10 @@ reads a random line from the local dictionary.
 
 -}
 
-dictionary_file = "/usr/share/dict/usa"
-sgetLine :: IO String
-sgetLine = do input <- getInputOrDict
-              putStrLn (map (const '-') input)
-              return input
+sgetLine :: String -> IO String
+sgetLine dictionary_file = do input <- getInputOrDict
+                              putStrLn (map (const '-') input)
+                              return input
     where getInputOrDict =  do
               input <- getInput
               if input == "" then do
@@ -35,7 +44,7 @@ sgetLine = do input <- getInputOrDict
                         if x == '\n' then
                            do return []
                         else
-                           do xs <- sgetLine
+                           do xs <- getInput
                               return (x:xs)
 
 {-
