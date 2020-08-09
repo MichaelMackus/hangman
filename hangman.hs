@@ -5,7 +5,7 @@ import System.Random
 main :: IO ()
 main = hangman
 
-dictionary_file = "/usr/share/dict/usa"
+default_dictionary = "words"
 usage = unlines ["Usage: hangman [DICTIONARY_FILE]",
                  "",
                  "NOTE: DICTIONARY_FILE defaults to " ++ default_dictionary]
