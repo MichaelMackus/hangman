@@ -154,12 +154,13 @@ play word =
               play word
 
 displayHangman :: String -> String -> IO ()
-displayHangman phase failures = do
-    let ls = lines phase
-    putStr $ ls !! 0 ++ "\t\tIncorrect guesses:\n"
-    putStr $ ls !! 1 ++ "\n"
-    putStr $ ls !! 2 ++ "\t\t" ++ nub failures ++ "\n"
-    putStr $ unlines (drop 3 ls)
+displayHangman phase failures =
+    if length failures == 0 then putStr phase
+    else do let ls = lines phase
+            putStr $ ls !! 0 ++ "\t\tIncorrect guesses:\n"
+            putStr $ ls !! 1 ++ "\n"
+            putStr $ ls !! 2 ++ "\t\t" ++ nub failures ++ "\n"
+            putStr $ unlines (drop 3 ls)
 
 {-
 
