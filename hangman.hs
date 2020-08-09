@@ -137,7 +137,7 @@ play word =
    do (s, failures) <- get
       guess <- liftIO $ take (length word) <$> getLine
       when (guess == "QUIT") (fail "User quit")
-      let s' = match word (guess ++ s)
+      let s' = match word $ map toLower (guess ++ s)
           mismatches = notmatching word guess
           failures' = failures ++ mismatches
           max_failures = length phases - 1
@@ -177,7 +177,7 @@ Note “haskell” matches l twice in “pascal”:
 
 match :: String -> String -> String
 match xs ys =
-   [if elem x ys then x else '-' | x <- xs]
+   [if elem (toLower x) (map toLower ys) then x else '-' | x <- xs]
 
 {-
 
@@ -185,9 +185,9 @@ Return non matching chars.
 
 -}
 notmatching :: String -> String -> String
-notmatching xs ys = catMaybes $ map (f xs) ys
+notmatching xs ys = catMaybes $ map (f $ map toLower xs) ys
     where f xs '-' = Nothing
-          f xs x   = if x `elem` xs then Nothing else Just x
+          f xs x   = if toLower x `elem` xs then Nothing else Just x
 
 
 {-
