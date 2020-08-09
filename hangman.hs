@@ -27,9 +27,9 @@ hangman = do args  <- getArgs
                 game arg
     where game dict = do putStrLn "Think of a word (blank for random): "
                          word <- sgetLine dict
-                         putStr (phases !! 0)
+                         putStrLn ""
                          putStrLn "Try to guess it:"
-                         runStateT (play word) mempty
+                         runStateT (play "" word) mempty
                          putStr "Play again? (Y/n) "
                          hFlush stdout
                          yn <- getLine
@@ -45,10 +45,7 @@ reads a random line from the local dictionary.
 -}
 
 sgetLine :: String -> IO String
-sgetLine dictionary_file = do input <- getInputOrDict
-                              putStrLn (map (const '-') input)
-                              return input
-    where getInputOrDict =  do
+sgetLine dictionary_file = do
               input <- getInput
               if input == "" then do
                   dict  <- lines <$> readFile dictionary_file
@@ -56,7 +53,7 @@ sgetLine dictionary_file = do input <- getInputOrDict
                   return (dict !! index)
               else
                   return input
-          getInput = do x <- getCh
+    where getInput = do x <- getCh
                         if x == '\n' then
                            do return []
                         else
@@ -132,10 +129,9 @@ phases = [ unlines ["  +---+",
                     " / \\  |",
                     "      |"] ]
 
-play :: String -> StateT (String, String) IO ()
-play word =
+play :: (MonadIO m, MonadFail m) => String -> String -> StateT (String, String) m ()
+play guess word =
    do (s, failures) <- get
-      guess <- liftIO getLine
       when (guess == "QUIT") (fail "User quit")
       let s' = match word $ map toLower (guess ++ s)
           mismatches = notmatching word guess
@@ -151,7 +147,8 @@ play word =
               liftIO $ putStrLn ("Uh oh! You lose. The word was: " ++ word)
           else do
               liftIO (putStrLn s')
-              play word
+              guess <- liftIO getLine
+              play guess word
 
 displayHangman :: String -> String -> IO ()
 displayHangman phase failures =
