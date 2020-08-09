@@ -1,4 +1,5 @@
 import Control.Monad.State
+import Data.Char
 import Data.List
 import Data.Maybe
 import System.Environment
@@ -31,8 +32,8 @@ hangman = do args  <- getArgs
                          runStateT (play word) mempty
                          putStr "Play again? (Y/n) "
                          hFlush stdout
-                         yn <- getChar
-                         if yn /= 'n' then game dict
+                         yn <- getLine
+                         if yn == "" || toLower (yn !! 0) /= 'n' then game dict
                          else return ()
 
 {-
