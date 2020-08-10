@@ -64,42 +64,6 @@ parseArgs = do args <- getArgs
           getSpellChecker          = getSpellChecker' . filter (isNothing . stripPrefix "--words=")
           getSpellChecker' (a:b:_) = Just <$> createSpellChecker a b
           getSpellChecker'  xs     = return Nothing
-{-
-
-The action sgetLine reads a line of text from the keyboard, echoing each
-character as a dash to keep the word secret. If there is no text inputted, it
-reads a random line from the local dictionary.
-
--}
-
-sgetLine :: String -> IO String
-sgetLine words_file = do
-              input <- getInput
-              if input == "" then do
-                  dict  <- lines <$> readFile words_file
-                  index <- getStdRandom (randomR (0, length dict))
-                  return (dict !! index)
-              else
-                  return input
-    where getInput = do x <- getCh
-                        if x == '\n' then
-                           do return []
-                        else
-                           do xs <- getInput
-                              return (x:xs)
-
-{-
-
-The action getCh reads a single character from the
-keyboard, without echoing it to the screen:
-
--}
-
-getCh :: IO Char
-getCh = do hSetEcho stdin False
-           x <- getChar
-           hSetEcho stdin True
-           return x
 
 {-
 
@@ -177,6 +141,44 @@ play guess word =
               liftIO (putStrLn s')
               guess <- liftIO getLine
               play guess word
+
+
+{-
+
+The action sgetLine reads a line of text from the keyboard, echoing each
+character as a dash to keep the word secret. If there is no text inputted, it
+reads a random line from the local dictionary.
+
+-}
+
+sgetLine :: String -> IO String
+sgetLine words_file = do
+              input <- getInput
+              if input == "" then do
+                  dict  <- lines <$> readFile words_file
+                  index <- getStdRandom (randomR (0, length dict))
+                  return (dict !! index)
+              else
+                  return input
+    where getInput = do x <- getCh
+                        if x == '\n' then
+                           do return []
+                        else
+                           do xs <- getInput
+                              return (x:xs)
+
+{-
+
+The action getCh reads a single character from the
+keyboard, without echoing it to the screen:
+
+-}
+
+getCh :: IO Char
+getCh = do hSetEcho stdin False
+           x <- getChar
+           hSetEcho stdin True
+           return x
 
 displayHangman :: String -> String -> IO ()
 displayHangman phase failures =
