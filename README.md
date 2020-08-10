@@ -1,4 +1,5 @@
 # Hangman-Game-Haskell
+
 Implementation of the game Hangman in Haskell.
 
 At the start of the game, one player secretly enters a word. Another player then tries to deduce the word via series of guesses. For each guess, we indicate which letters in the secret word occur in the guess, and the game ends when the guess is correct.
@@ -30,6 +31,9 @@ s-cr--
 You got it!
 ```
 # Reference
+
 This game is an example which illustrates the basics of IO programming.
 
 The materials were gathered from the book "Programming in Haskell" http://www.cs.nott.ac.uk/~pszgmh/pih.html
+
+Forked from https://github.com/rst0git/Hangman-Game-Haskell
