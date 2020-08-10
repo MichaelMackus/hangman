@@ -32,7 +32,7 @@ hangman = parseArgs >>= handleArgs
                 word <- askForWord sc wordsf
                 putStrLn ""
                 putStrLn "Try to guess it:"
-                runStateT (play "" word) mempty
+                runStateT (play word) mempty
                 putStr "Play again? (Y/n) "
                 hFlush stdout
                 yes <- askYN True
@@ -121,16 +121,16 @@ phases = [ unlines ["  +---+",
                     " / \\  |",
                     "      |"] ]
 
-play :: (MonadIO m, MonadFail m) => String -> String -> StateT (String, String) m ()
-play guess word =
-   do (s, failures) <- get
+play :: String -> StateT (String, String, String) IO ()
+play word =
+   do (s, guess, failures) <- get
       when (guess == "QUIT") (fail "User quit")
       let s' = match word $ map toLower (guess ++ s)
           mismatches = notmatching word guess
           failures' = failures ++ mismatches
           max_failures = length phases - 1
           phase = phases !! min max_failures (length failures')
-      put (s', failures')
+      put (s', guess, failures')
       liftIO (displayHangman phase failures')
       if word == s' && length failures' <= max_failures then
           liftIO $ putStrLn ("You got it! The word was: " ++ word)
@@ -139,8 +139,9 @@ play guess word =
               liftIO $ putStrLn ("Uh oh! You lose. The word was: " ++ word)
           else do
               liftIO (putStrLn s')
-              guess <- liftIO getLine
-              play guess word
+              guess' <- liftIO getLine
+              put (s', guess', failures')
+              play word
 
 
 {-
