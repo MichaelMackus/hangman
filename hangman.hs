@@ -132,7 +132,7 @@ play word =
           phase = phases !! min max_failures (length failures')
       put (s', guess, failures')
       liftIO (displayHangman phase failures')
-      if word == s' && length failures' <= max_failures then
+      if word == s' && length failures' < max_failures then
           liftIO $ putStrLn ("You got it! The word was: " ++ word)
       else
           if length failures' >= max_failures then
