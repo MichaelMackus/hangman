@@ -29,21 +29,31 @@ hangman = parseArgs >>= handleArgs
                 putStrLn ""
                 game conf
           game (Config sc wordsf) = do
-                putStrLn "Think of a word (blank for random): "
-                word <- sgetLine wordsf
-                when (isJust sc) (spellCheck sc word)
+                word <- askForWord sc wordsf
                 putStrLn ""
                 putStrLn "Try to guess it:"
                 runStateT (play "" word) mempty
                 putStr "Play again? (Y/n) "
                 hFlush stdout
-                yn <- getLine
-                if yn == "" || toLower (yn !! 0) /= 'n' then game (Config sc wordsf)
+                yes <- askYN True
+                if yes then game (Config sc wordsf)
                 else return ()
-          spellCheck (Just sc) word = do
+          thinkOfWord = "Think of a word (blank for random): "
+          askForWord (Nothing) wordsf = do
+                putStrLn thinkOfWord
+                sgetLine wordsf
+          askForWord (Just sc) wordsf = do
+                putStrLn thinkOfWord
+                word <- sgetLine wordsf
                 r <- spell sc word
-                when (not r) $ putStrLn "Spell-check error - did you spell that correctly?"
-          spellCheck (Nothing) word = fail "Invalid spell checker"
+                if r then return word
+                else do
+                    putStrLn "Spell-check error - did you spell that correctly? (y/N) "
+                    yes <- askYN False
+                    if not yes then askForWord (Just sc) wordsf
+                    else return word
+
+          askYN def = (listToMaybe . map toLower <$> getLine) >>= return . maybe def (=='y')
 
 parseArgs :: IO Config
 parseArgs = do args <- getArgs
