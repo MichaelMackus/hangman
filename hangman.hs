@@ -11,9 +11,9 @@ main :: IO ()
 main = hangman
 
 default_words = "words"
-usage = unlines ["Usage: hangman [--words=RANDOM_WORDS_LIST] [HUNSPELL_AFF_FILE] [HUNSPELL_DIC_FILE]",
+usage = unlines ["Usage: hangman [--words=RANDOM_WORDS_FILE] [HUNSPELL_AFF_FILE] [HUNSPELL_DIC_FILE]",
                  "",
-                 "NOTE: RANDOM_WORDS_LIST defaults to " ++ default_words,
+                 "NOTE: RANDOM_WORDS_FILE defaults to " ++ default_words,
                  "Spellchecker requires hunspell. Pass the path to the AFF file & DIC files, and spellchecking will be enabled."]
 
 data Config = Config (Maybe SpellChecker) String | Help
