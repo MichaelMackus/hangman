@@ -45,7 +45,7 @@ hangman = parseArgs >>= handleArgs
           askForWord (Just sc) wordsf = do
                 putStrLn thinkOfWord
                 word <- sgetLine wordsf
-                r <- spell sc word
+                r    <- all id <$> mapM (spell sc) (words word)
                 if r then return word
                 else do
                     putStrLn "Spell-check error - did you spell that correctly? (y/N) "
