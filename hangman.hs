@@ -25,13 +25,11 @@ hangman = parseArgs >>= handleArgs
                 title <- readFile "title.txt"
                 putStr title
                 putStrLn ""
-                putStrLn "Type QUIT in all caps to quit the game"
-                putStrLn ""
                 game conf
           game (Config sc wordsf) = do
                 word <- askForWord sc wordsf
                 putStrLn ""
-                putStrLn "Try to guess it:"
+                putStrLn "Starting new game... try to guess the word or type QUIT to exit:"
                 runStateT (play word) mempty
                 putStr "Play again? (Y/n) "
                 hFlush stdout
@@ -40,10 +38,12 @@ hangman = parseArgs >>= handleArgs
                 else return ()
           thinkOfWord = "Think of a word (blank for random): "
           askForWord (Nothing) wordsf = do
-                putStrLn thinkOfWord
+                putStr thinkOfWord
+                hFlush stdout
                 sgetLine wordsf
           askForWord (Just sc) wordsf = do
-                putStrLn thinkOfWord
+                putStr thinkOfWord
+                hFlush stdout
                 word <- sgetLine wordsf
                 r    <- all id <$> mapM (spell sc) (words word)
                 if r then return word
