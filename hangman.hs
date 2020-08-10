@@ -2,6 +2,7 @@ import Control.Monad.State
 import Data.Char
 import Data.List
 import Data.Maybe
+import Language.Hunspell
 import System.Environment
 import System.IO
 import System.Random
@@ -9,33 +10,50 @@ import System.Random
 main :: IO ()
 main = hangman
 
-default_dictionary = "words"
-usage = unlines ["Usage: hangman [DICTIONARY_FILE]",
+default_words = "words"
+usage = unlines ["Usage: hangman [--words=RANDOM_WORDS_LIST] [HUNSPELL_AFF_FILE] [HUNSPELL_DIC_FILE]",
                  "",
-                 "NOTE: DICTIONARY_FILE defaults to " ++ default_dictionary]
+                 "NOTE: RANDOM_WORDS_LIST defaults to " ++ default_words,
+                 "Spellchecker requires hunspell. Pass the path to the AFF file & DIC files, and spellchecking will be enabled."]
+
+data Config = Config (Maybe SpellChecker) String | Help
 
 hangman :: IO ()
-hangman = do args  <- getArgs
-             let arg = if length args > 0 then args !! 0 else default_dictionary
-             if arg == "-h" || arg == "--help" then putStr usage
-             else do
+hangman = parseArgs >>= handleArgs
+    where handleArgs (Help)       = putStr usage
+          handleArgs conf         =  do
                 title <- readFile "title.txt"
                 putStr title
                 putStrLn ""
                 putStrLn "Type QUIT in all caps to quit the game"
                 putStrLn ""
-                game arg
-    where game dict = do putStrLn "Think of a word (blank for random): "
-                         word <- sgetLine dict
-                         putStrLn ""
-                         putStrLn "Try to guess it:"
-                         runStateT (play "" word) mempty
-                         putStr "Play again? (Y/n) "
-                         hFlush stdout
-                         yn <- getLine
-                         if yn == "" || toLower (yn !! 0) /= 'n' then game dict
-                         else return ()
+                game conf
+          game (Config sc wordsf) = do
+                putStrLn "Think of a word (blank for random): "
+                word <- sgetLine wordsf
+                when (isJust sc) (spellCheck sc word)
+                putStrLn ""
+                putStrLn "Try to guess it:"
+                runStateT (play "" word) mempty
+                putStr "Play again? (Y/n) "
+                hFlush stdout
+                yn <- getLine
+                if yn == "" || toLower (yn !! 0) /= 'n' then game (Config sc wordsf)
+                else return ()
+          spellCheck (Just sc) word = do
+                r <- spell sc word
+                when (not r) $ putStrLn "Spell-check error - did you spell that correctly?"
+          spellCheck (Nothing) word = fail "Invalid spell checker"
 
+parseArgs :: IO Config
+parseArgs = do args <- getArgs
+               let words = maybe default_words id (listToMaybe . catMaybes $ map getWords args)
+               s <- getSpellChecker args
+               return (Config s words)
+    where getWords = stripPrefix "--words="
+          getSpellChecker          = getSpellChecker' . filter (isNothing . stripPrefix "--words=")
+          getSpellChecker' (a:b:_) = Just <$> createSpellChecker a b
+          getSpellChecker'  xs     = return Nothing
 {-
 
 The action sgetLine reads a line of text from the keyboard, echoing each
@@ -45,10 +63,10 @@ reads a random line from the local dictionary.
 -}
 
 sgetLine :: String -> IO String
-sgetLine dictionary_file = do
+sgetLine words_file = do
               input <- getInput
               if input == "" then do
-                  dict  <- lines <$> readFile dictionary_file
+                  dict  <- lines <$> readFile words_file
                   index <- getStdRandom (randomR (0, length dict))
                   return (dict !! index)
               else

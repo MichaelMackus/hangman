@@ -29,5 +29,5 @@ executable hangman
       .
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5, random >=1.1, mtl >= 2.0
+      base >=4.7 && <5, random >=1.1, mtl >= 2.0, hunspell-hs >= 0.2.0.0
   default-language: Haskell2010
